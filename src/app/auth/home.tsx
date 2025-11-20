@@ -9,14 +9,14 @@ import titleLogo from '../../../assets/titleLogo.png'
 
 const { width, height } = Dimensions.get('window')
 
-const home = () => {
+const Home = () => {
   const handlePress = (screen: string) => {
     if (screen === 'スタート') {
-      router.push('/auth/game')
+      router.push('/auth/Game')
     } else if (screen === 'ランキング') {
-      router.push('/ranking')
+      router.push('/Ranking')
     } else if (screen === 'ルール') {
-      router.push('/rules')
+      router.push('/Rules')
     }
   }
 
@@ -68,4 +68,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default home
+export default Home

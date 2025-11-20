@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native'
+import { Link } from 'expo-router'
 
 import Background from '../../components/Background'
 import holeImage from '../../../assets/holeBox.png'
+import { BlurView } from 'expo-blur'
 
 const { width, height } = Dimensions.get('window')
 
@@ -29,6 +31,7 @@ const TimerBar = () => {
   )
 }
 
+{/* ----- ポーズ画面 ----- */ }
 interface PauseScreenProps {
   onResume: () => void
   onGoToTitle: () => void
@@ -36,21 +39,29 @@ interface PauseScreenProps {
 
 const PauseScreen: React.FC<PauseScreenProps> = ({ onResume, onGoToTitle }) => {
   return (
-    <View style={pauseStyles.overlay}>
-      <View style={pauseStyles.popup}>
-        <Text style={pauseStyles.pauseText}>一時停止中...</Text>
-        <TouchableOpacity style={pauseStyles.button} onPress={onResume}>
-          <Text style={pauseStyles.buttonText}>つづける</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[pauseStyles.button, pauseStyles.titleButton]} onPress={onGoToTitle}>
-          <Text style={pauseStyles.buttonText}>タイトルへ</Text>
-        </TouchableOpacity>
+    <BlurView
+      style={pauseStyles.overlay}
+      intensity={10}
+      tint='light'
+    >
+      <View style={pauseStyles.overlay}>
+        <View style={pauseStyles.popup}>
+          <Text style={pauseStyles.pauseText}>一時停止中...</Text>
+          <TouchableOpacity style={pauseStyles.button} onPress={onResume}>
+            <Text style={pauseStyles.buttonText}>つづける</Text>
+          </TouchableOpacity>
+          <Link style={[pauseStyles.button, pauseStyles.titleButton]} href='/auth/Home' asChild onPress={onGoToTitle}>
+            <TouchableOpacity>
+              <Text style={pauseStyles.buttonText}>タイトルへ</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
       </View>
-    </View>
+    </BlurView>
   )
 }
 
-const game = () => {
+const Game = () => {
   const moleHoles = Array(GRID_SIZE * GRID_SIZE).fill(0)
   const [isPaused, setIsPaused] = useState(false)
   const togglePause = () => {
@@ -60,7 +71,6 @@ const game = () => {
     setIsPaused(false)
   }
   const handleGoToTitle = () => {
-    alert('タイトル画面へ戻る処理を実装')
     setIsPaused(false)
   }
   return (
@@ -68,12 +78,12 @@ const game = () => {
       <View style={styles.container}>
         <View style={styles.infoLayer}>
           <View style={styles.topArea}>
-            {/*----- コンボ -----*/}
+            {/* ----- コンボ ----- */}
             <View style={styles.comboArea}>
               <Text style={styles.comboLabel}>コンボ</Text>
               <Text style={styles.comboNumber}>555</Text>
             </View>
-            {/*----- ポーズボタン -----*/}
+            {/* ----- ポーズボタン ----- */}
             <TouchableOpacity
               style={styles.pauseButton}
               onPress={togglePause} // 👈 ここを修正
@@ -83,13 +93,13 @@ const game = () => {
             </TouchableOpacity>
           </View>
 
-          {/*----- タイマー -----*/}
+          {/* ----- タイマー ----- */}
           <View style={styles.timerArea}>
             <TimerBar />
           </View>
 
 
-          {/*----- スコア -----*/}
+          {/* ----- スコア ----- */}
           <View style={styles.scoreAreaWrapper}>
             <View style={styles.scoreArea}>
               <Text style={styles.scoreLabel}>スコア</Text>
@@ -99,7 +109,7 @@ const game = () => {
         </View>
 
 
-        {/*----- ゲームエリア -----*/}
+        {/* ----- ゲームエリア ----- */}
         <View style={[styles.gameArea, { height: GAME_AREA_HEIGHT }]}>
           {moleHoles.map((_, index) => (
             <View key={index} style={styles.holeContainer}>
@@ -274,7 +284,7 @@ const pauseStyles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999
@@ -311,4 +321,4 @@ const pauseStyles = StyleSheet.create({
   }
 })
 
-export default game
+export default Game
