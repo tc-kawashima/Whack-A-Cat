@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native'
 import { Link } from 'expo-router'
+import { BlurView } from 'expo-blur'
 
 import Background from '../../components/Background'
 import holeImage from '../../../assets/holeBox.png'
-import { BlurView } from 'expo-blur'
+import catNormal from '../../../assets/catNormalIdle.png'
+import catDevil from '../../../assets/catDevilIdle.png'
+import catAngel from '../../../assets/catAngelIdle.png'
 
 const { width } = Dimensions.get('window')
 
@@ -56,7 +59,9 @@ const TimerBar = ({ isPaused }: { isPaused: boolean }) => {
   )
 }
 
-{/* ----- ポーズ画面 ----- */ }
+// --------------------
+// ポーズ画面
+// --------------------
 interface PauseScreenProps {
   onResume: () => void
   onGoToTitle: () => void
@@ -86,9 +91,61 @@ const PauseScreen: React.FC<PauseScreenProps> = ({ onResume, onGoToTitle }) => {
   )
 }
 
+// --------------------
+// ゲーム画面
+// --------------------
+type CatType = 'normal' | 'devil' | 'angel'
+
+interface Cat {
+  type: CatType
+  visible: boolean
+}
+
 const Game = () => {
   const moleHoles = Array(GRID_SIZE * GRID_SIZE).fill(0)
+  const [cats, setCats] = useState<Cat[]>(
+    moleHoles.map(() => ({ type: 'normal', visible: false }))
+  )
   const [isPaused, setIsPaused] = useState(false)
+
+  // ねこ出現処理
+  useEffect(() => {
+    if (isPaused) return
+    const interval = setInterval(() => {
+      const index = Math.floor(Math.random() * moleHoles.length)
+      const types: CatType[] = ['normal', 'devil', 'angel']
+      const randomType = types[Math.floor(Math.random() * types.length)]
+
+      setCats(prev => {
+        const newCats = [...prev]
+        newCats[index] = { type: randomType, visible: true }
+        return newCats
+      })
+
+      setTimeout(() => {
+        setCats(prev => {
+          const newCats = [...prev]
+          newCats[index].visible = false
+          return newCats
+        })
+      }, 1000)
+    }, 1500)
+
+    return () => clearInterval(interval)
+  }, [isPaused])
+
+  const getCatImage = (cat: Cat) => {
+    if (!cat.visible) return null
+    switch (cat.type) {
+      case 'normal':
+        return catNormal
+      case 'devil':
+        return catDevil
+      case 'angel':
+        return catAngel
+    }
+  }
+
   const togglePause = () => {
     setIsPaused(prev => !prev)
   }
@@ -120,7 +177,7 @@ const Game = () => {
 
           {/* ----- タイマー ----- */}
           <View style={styles.timerArea}>
-            <TimerBar isPaused={isPaused}/>
+            <TimerBar isPaused={isPaused} />
           </View>
 
 
@@ -136,18 +193,25 @@ const Game = () => {
 
         {/* ----- ゲームエリア ----- */}
         <View style={[styles.gameArea, { height: GAME_AREA_HEIGHT }]}>
-          {moleHoles.map((_, index) => (
+          {cats.map((cat, index) => (
             <View key={index} style={styles.holeContainer}>
               <Image
                 source={holeImage}
                 style={[styles.holeImage, { width: TILE_SIZE, height: TILE_SIZE }]}
                 resizeMode="contain"
               />
-              {/* 💡 後でモグラ画像がここに重ねて表示される */}
+              {cat.visible && (
+                <Image
+                  source={getCatImage(cat)!}
+                  style={[styles.catImage, { width: TILE_SIZE * 0.6, height: TILE_SIZE * 0.6 }]}
+                  resizeMode="contain"
+                />
+              )}
             </View>
           ))}
         </View>
 
+        {/* ----- ポーズ画面 ----- */}
         {isPaused && (
           <PauseScreen
             onResume={handleResume}
@@ -254,7 +318,9 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   holeImage: {
-
+  },
+  catImage: {
+    position: 'absolute'
   }
 })
 

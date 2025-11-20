@@ -4,7 +4,7 @@ const Layout = () => {
     return (
         <Stack
             screenOptions={{
-                headerShown: false,
+                headerShown: false
             }}
         >
             <Stack.Screen name="auth/Home" />
