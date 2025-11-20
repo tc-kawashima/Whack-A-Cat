@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native'
 import { Link } from 'expo-router'
 
 import Background from '../../components/Background'
@@ -13,19 +13,44 @@ const GAME_WIDTH_RATIO = 0.95
 const TILE_SIZE = (width * GAME_WIDTH_RATIO) / GRID_SIZE
 const GAME_AREA_HEIGHT = width * GAME_WIDTH_RATIO
 
-const DUMMY_PROGRESS = 0.7
 const REMAINING_TIME = 30
-const TimerBar = () => {
+
+const TimerBar = ({ isPaused }: { isPaused: boolean }) => {
+  const [timeLeft, setTimeLeft] = useState(REMAINING_TIME)
   const barWidth = width * 0.6
+  const circleWidth = 48
+  const maxGaugeWidth = barWidth - circleWidth / 1.5
+  const progressAnim = useRef(new Animated.Value(maxGaugeWidth)).current
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isPaused) {
+        setTimeLeft(prev => Math.max(prev - 0.1, 0))
+      }
+    }, 100)
+    return () => clearInterval(interval)
+  }, [isPaused])
+  useEffect(() => {
+    const newWidth = (timeLeft / REMAINING_TIME) * maxGaugeWidth
+    Animated.timing(progressAnim, {
+      toValue: newWidth,
+      duration: 100,
+      useNativeDriver: false
+    }).start()
+  }, [timeLeft])
   return (
     <View style={[timerStyles.gaugeWrapper, { width: barWidth }]}>
       <View style={timerStyles.gaugeBody}>
         <View style={timerStyles.timerBarWrapper}>
-          <View style={[timerStyles.timerBarProgress, { width: `${DUMMY_PROGRESS * 100}%` }]} />
+          <Animated.View
+            style={[
+              timerStyles.timerBarProgress,
+              { width: progressAnim }
+            ]}
+          />
         </View>
       </View>
       <View style={timerStyles.timeCircle}>
-        <Text style={timerStyles.timeText}>{REMAINING_TIME}</Text>
+        <Text style={timerStyles.timeText}>{Math.ceil(timeLeft)}</Text>
       </View>
     </View>
   )
@@ -86,7 +111,7 @@ const Game = () => {
             {/* ----- ポーズボタン ----- */}
             <TouchableOpacity
               style={styles.pauseButton}
-              onPress={togglePause} // 👈 ここを修正
+              onPress={togglePause}
               disabled={isPaused}
             >
               <Text style={styles.pauseButtonText}>II</Text>
@@ -95,7 +120,7 @@ const Game = () => {
 
           {/* ----- タイマー ----- */}
           <View style={styles.timerArea}>
-            <TimerBar />
+            <TimerBar isPaused={isPaused}/>
           </View>
 
 
