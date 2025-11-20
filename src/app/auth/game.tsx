@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native'
 
 import Background from '../../components/Background'
@@ -29,8 +29,40 @@ const TimerBar = () => {
   )
 }
 
+interface PauseScreenProps {
+  onResume: () => void
+  onGoToTitle: () => void
+}
+
+const PauseScreen: React.FC<PauseScreenProps> = ({ onResume, onGoToTitle }) => {
+  return (
+    <View style={pauseStyles.overlay}>
+      <View style={pauseStyles.popup}>
+        <Text style={pauseStyles.pauseText}>一時停止中...</Text>
+        <TouchableOpacity style={pauseStyles.button} onPress={onResume}>
+          <Text style={pauseStyles.buttonText}>つづける</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[pauseStyles.button, pauseStyles.titleButton]} onPress={onGoToTitle}>
+          <Text style={pauseStyles.buttonText}>タイトルへ</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  )
+}
+
 const game = () => {
   const moleHoles = Array(GRID_SIZE * GRID_SIZE).fill(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const togglePause = () => {
+    setIsPaused(prev => !prev)
+  }
+  const handleResume = () => {
+    setIsPaused(false)
+  }
+  const handleGoToTitle = () => {
+    alert('タイトル画面へ戻る処理を実装')
+    setIsPaused(false)
+  }
   return (
     <Background>
       <View style={styles.container}>
@@ -42,7 +74,11 @@ const game = () => {
               <Text style={styles.comboNumber}>555</Text>
             </View>
             {/*----- ポーズボタン -----*/}
-            <TouchableOpacity style={styles.pauseButton}>
+            <TouchableOpacity
+              style={styles.pauseButton}
+              onPress={togglePause} // 👈 ここを修正
+              disabled={isPaused}
+            >
               <Text style={styles.pauseButtonText}>II</Text>
             </TouchableOpacity>
           </View>
@@ -76,54 +112,17 @@ const game = () => {
             </View>
           ))}
         </View>
+
+        {isPaused && (
+          <PauseScreen
+            onResume={handleResume}
+            onGoToTitle={handleGoToTitle}
+          />
+        )}
       </View>
     </Background >
   )
 }
-
-const timerStyles = StyleSheet.create({
-  gaugeWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    marginBottom: 32
-  },
-  gaugeBody: {
-    flex: 1
-  },
-  timerBarWrapper: {
-    height: 24,
-    backgroundColor: '#8A8A8A',
-    borderRadius: 12,
-    justifyContent: 'center',
-    overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: '#7A7A7A'
-  },
-  timerBarProgress: {
-    height: '100%',
-    backgroundColor: '#2E97D8',
-    borderRadius: 0
-  },
-  timeCircle: {
-    position: 'absolute',
-    right: -12,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#8A8A8A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#7A7A7A'
-  },
-  timeText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 20
-  },
-})
 
 const styles = StyleSheet.create({
   container: {
@@ -221,6 +220,94 @@ const styles = StyleSheet.create({
   },
   holeImage: {
 
+  }
+})
+
+const timerStyles = StyleSheet.create({
+  gaugeWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 32
+  },
+  gaugeBody: {
+    flex: 1
+  },
+  timerBarWrapper: {
+    height: 24,
+    backgroundColor: '#8A8A8A',
+    borderRadius: 12,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: '#7A7A7A'
+  },
+  timerBarProgress: {
+    height: '100%',
+    backgroundColor: '#2E97D8',
+    borderRadius: 0
+  },
+  timeCircle: {
+    position: 'absolute',
+    right: -12,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#8A8A8A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#7A7A7A'
+  },
+  timeText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 20
+  },
+})
+
+const pauseStyles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999
+  },
+  popup: {
+    width: width * 0.8,
+    padding: 26,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 15,
+    alignItems: 'center',
+  },
+  pauseText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFA500',
+    marginBottom: 24
+  },
+  button: {
+    width: '80%',
+    paddingVertical: 15,
+    backgroundColor: '#2E97D8',
+    borderRadius: 10,
+    marginVertical: 10,
+    alignItems: 'center'
+  },
+  titleButton: {
+    backgroundColor: '#D9534F',
+  },
+  // ボタンテキスト
+  buttonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF'
   }
 })
 
