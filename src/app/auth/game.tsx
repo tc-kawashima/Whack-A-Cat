@@ -6,7 +6,7 @@ import Background from '../../components/Background'
 import holeImage from '../../../assets/holeBox.png'
 import { BlurView } from 'expo-blur'
 
-const { width, height } = Dimensions.get('window')
+const { width } = Dimensions.get('window')
 
 const GRID_SIZE = 3
 const GAME_WIDTH_RATIO = 0.95
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   timerArea: {
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   comboArea: {
     backgroundColor: '#D9534F',
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   },
   comboLabel: {
     color: '#FFF',
-    fontSize: 12,
+    fontSize: 12
   },
   comboNumber: {
     color: '#FFA500',
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   pauseButtonText: {
     fontSize: 20,
     color: '#FFF',
-    fontWeight: 'bold',
+    fontWeight: 'bold'
 
   },
   scoreAreaWrapper: {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     left: 12,
     color: '#FFF',
     fontSize: 12,
-    fontWeight: 'normal',
+    fontWeight: 'normal'
   },
   scoreNumber: {
     position: 'absolute',
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#FFF',
     fontSize: 36,
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   gameArea: {
     flexDirection: 'row',
@@ -274,7 +274,7 @@ const timerStyles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 20
-  },
+  }
 })
 
 const pauseStyles = StyleSheet.create({
@@ -294,7 +294,7 @@ const pauseStyles = StyleSheet.create({
     padding: 26,
     backgroundColor: '#1A1A1A',
     borderRadius: 15,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   pauseText: {
     fontSize: 28,
@@ -311,7 +311,7 @@ const pauseStyles = StyleSheet.create({
     alignItems: 'center'
   },
   titleButton: {
-    backgroundColor: '#D9534F',
+    backgroundColor: '#D9534F'
   },
   // ボタンテキスト
   buttonText: {
