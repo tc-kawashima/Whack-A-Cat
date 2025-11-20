@@ -7,8 +7,8 @@ const Layout = () => {
                 headerShown: false,
             }}
         >
-            <Stack.Screen name="auth/home" />
-            <Stack.Screen name="auth/game" />
+            <Stack.Screen name="auth/Home" />
+            <Stack.Screen name="auth/Game" />
         </Stack>
     )
 }

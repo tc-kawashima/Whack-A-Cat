@@ -1,22 +1,22 @@
 import React from 'react'
-import { StyleSheet, View, Text, Image, TouchableOpacity, Dimensions } from 'react-native'
-import { Link, router } from 'expo-router'
+import { StyleSheet, View, Image, Dimensions } from 'react-native'
+import { router } from 'expo-router'
 
 import Background from '../../components/Background'
 import CustomButton from '../../components/CustomButton'
 import titleLogo from '../../../assets/titleLogo.png'
 
 
-const { height } = Dimensions.get('window')
+const { width, height } = Dimensions.get('window')
 
-const home = () => {
+const Home = () => {
   const handlePress = (screen: string) => {
     if (screen === 'スタート') {
-      router.push('/auth/game')
+      router.push('/auth/Game')
     } else if (screen === 'ランキング') {
-      router.push('/ranking')
+      router.push('/Ranking')
     } else if (screen === 'ルール') {
-      router.push('/rules')
+      router.push('/Rules')
     }
   }
 
@@ -59,8 +59,7 @@ const styles = StyleSheet.create({
   },
   titleLogo: {
     width: '90%',
-    height: height * 0.15,
-    marginTop: 120
+    marginTop: 64
   },
   buttonContainer: {
     width: '60%',
@@ -69,4 +68,4 @@ const styles = StyleSheet.create({
   }
 })
 
-export default home
+export default Home
