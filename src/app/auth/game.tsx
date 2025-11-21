@@ -22,6 +22,7 @@ const GAME_WIDTH_RATIO = 0.95
 const TILE_SIZE = (width * GAME_WIDTH_RATIO) / GRID_SIZE
 const GAME_AREA_HEIGHT = width * GAME_WIDTH_RATIO
 const REMAINING_TIME = 30
+const CAT_LIFESPAN = 1200
 
 // --------------------
 // タイマーゲージ処理
@@ -29,8 +30,7 @@ const REMAINING_TIME = 30
 const TimerBar = ({ isPaused }: { isPaused: boolean }) => {
   const [timeLeft, setTimeLeft] = useState(REMAINING_TIME)
   const barWidth = width * 0.6
-  const circleWidth = 48
-  const maxGaugeWidth = barWidth - circleWidth / 1.5
+  const maxGaugeWidth = barWidth - 48 / 1.5
   const progressAnim = useRef(new Animated.Value(maxGaugeWidth)).current
   useEffect(() => {
     const interval = setInterval(() => {
@@ -110,6 +110,7 @@ interface Cat {
   visible: boolean
   isAnimating: boolean
   phase: AnimationPhase
+  lifeTimer: number
 }
 
 const Game = () => {
@@ -117,7 +118,7 @@ const Game = () => {
   const [score, setScore] = useState(0)
   const [combo, setCombo] = useState(0)
   const [cats, setCats] = useState<Cat[]>(
-    moleHoles.map(() => ({ type: 'normal', visible: false, isAnimating: false, phase: 'hidden' }))
+    moleHoles.map(() => ({ type: 'normal', visible: false, isAnimating: false, phase: 'hidden', lifeTimer: 0 }))
   )
   const [isPaused, setIsPaused] = useState(false)
 
@@ -134,22 +135,29 @@ const Game = () => {
       setCats(prev => {
         if (prev[index].visible || prev[index].isAnimating) return prev
         const newCats = [...prev]
-        newCats[index] = { type: randomType, visible: true, isAnimating: false, phase: 'idle' }
+        newCats[index] = { type: randomType, visible: true, isAnimating: false, phase: 'idle', lifeTimer: CAT_LIFESPAN }
         return newCats
       })
-
-      setTimeout(() => {
-        setCats(prev => {
-          const newCats = [...prev]
-          if (newCats[index].visible && newCats[index].phase === 'idle') {
-            newCats[index] = { ...newCats[index], visible: false, phase: 'hidden' }
-          }
-          return newCats
-        })
-      }, 1200)
-    }, 800)
+    }, 1300)
 
     return () => clearInterval(interval)
+  }, [isPaused])
+
+  // ねこ出現時間管理
+  useEffect(() => {
+    if (isPaused) return
+
+    const loopInterval = setInterval(()=> {
+      setCats(prev => prev.map(cat => {
+        if (!cat.visible || cat.phase !== 'idle') return cat
+        const newTimer = cat.lifeTimer - 100
+        if (newTimer <= 0) {
+          return { ...cat,visible: false, phase: 'hidden', lifeTimer: 0 }
+        }
+        return { ...cat, lifeTimer: newTimer }
+      }))
+    }, 100)
+    return () => clearInterval(loopInterval)
   }, [isPaused])
 
   // タップ時処理
@@ -192,7 +200,7 @@ const Game = () => {
         return newCats
       })
 
-      // アニメーション 消滅
+      // アニメーション 非表示
       setTimeout(() => {
         setCats(prev => {
           const newCats = [...prev]
@@ -236,8 +244,8 @@ const Game = () => {
       <Image
         source={imageSource}
         style={{
-          width: isEffect ? TILE_SIZE * 0.9 : TILE_SIZE * 0.6,
-          height: isEffect ? TILE_SIZE * 0.9 : TILE_SIZE * 0.6
+          width: isEffect ? TILE_SIZE : TILE_SIZE * 0.6,
+          height: isEffect ? TILE_SIZE : TILE_SIZE * 0.6
         }}
         resizeMode="contain"
       />
