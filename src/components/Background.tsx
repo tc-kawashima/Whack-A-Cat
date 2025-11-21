@@ -11,19 +11,19 @@ interface BackgroundProps {
 const Background = ({ children }: BackgroundProps) => {
     return (
         <View style={styles.absoluteContainer}>
-        <ImageBackground
-            source={backgroundImage}
-            style={styles.background}
-            resizeMode='cover'
-        >
-            <BlurView
-                intensity={10}
-                tint="dark"
-                style={StyleSheet.absoluteFill}
+            <ImageBackground
+                source={backgroundImage}
+                style={styles.background}
+                resizeMode='cover'
             >
-                {children}
-            </BlurView>
-        </ImageBackground>
+                <BlurView
+                    intensity={10}
+                    tint="dark"
+                    style={StyleSheet.absoluteFill}
+                >
+                    {children}
+                </BlurView>
+            </ImageBackground>
         </View>
     )
 }

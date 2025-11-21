@@ -4,6 +4,7 @@ import { Link } from 'expo-router'
 import { BlurView } from 'expo-blur'
 
 import Background from '../../components/Background'
+import FinishScreen from '../../components/FinishScreen'
 import holeImage from '../../../assets/holeBox.png'
 import catNormal from '../../../assets/catNormalIdle.png'
 import catDevil from '../../../assets/catDevilIdle.png'
@@ -27,27 +28,25 @@ const CAT_LIFESPAN = 1200
 // --------------------
 // タイマーゲージ処理
 // --------------------
-const TimerBar = ({ isPaused }: { isPaused: boolean }) => {
-  const [timeLeft, setTimeLeft] = useState(REMAINING_TIME)
+interface TimerBarProps {
+  timeLeft: number
+  maxTime: number
+}
+
+const TimerBar = ({ timeLeft, maxTime }: TimerBarProps) => {
   const barWidth = width * 0.6
   const maxGaugeWidth = barWidth - 48 / 1.5
   const progressAnim = useRef(new Animated.Value(maxGaugeWidth)).current
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isPaused) {
-        setTimeLeft(prev => Math.max(prev - 0.1, 0))
-      }
-    }, 100)
-    return () => clearInterval(interval)
-  }, [isPaused])
-  useEffect(() => {
-    const newWidth = (timeLeft / REMAINING_TIME) * maxGaugeWidth
+    const newWidth = (timeLeft / maxTime) * maxGaugeWidth
     Animated.timing(progressAnim, {
       toValue: newWidth,
       duration: 100,
       useNativeDriver: false
     }).start()
   }, [timeLeft])
+
   return (
     <View style={[timerStyles.gaugeWrapper, { width: barWidth }]}>
       <View style={timerStyles.gaugeBody}>
@@ -121,10 +120,31 @@ const Game = () => {
     moleHoles.map(() => ({ type: 'normal', visible: false, isAnimating: false, phase: 'hidden', lifeTimer: 0 }))
   )
   const [isPaused, setIsPaused] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(REMAINING_TIME)
+  const [isGameOver, setIsGameOver] = useState(false)
 
-  // ねこ出現処理
+  // 制限時間
   useEffect(() => {
-    if (isPaused) return
+    if (isPaused || isGameOver) return
+
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        const nextTime = prev - 0.1
+        if (nextTime <= 0) {
+          clearInterval(interval)
+          setIsGameOver(true)
+          return 0
+        }
+        return nextTime
+      })
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [isPaused, isGameOver])
+
+  // ねこ出現
+  useEffect(() => {
+    if (isPaused || isGameOver) return
     const interval = setInterval(() => {
       const index = Math.floor(Math.random() * moleHoles.length)
       const rand = Math.random()
@@ -141,29 +161,29 @@ const Game = () => {
     }, 1300)
 
     return () => clearInterval(interval)
-  }, [isPaused])
+  }, [isPaused, isGameOver])
 
-  // ねこ出現時間管理
+  // ねこ出現時間
   useEffect(() => {
-    if (isPaused) return
+    if (isPaused || isGameOver) return
 
-    const loopInterval = setInterval(()=> {
+    const loopInterval = setInterval(() => {
       setCats(prev => prev.map(cat => {
         if (!cat.visible || cat.phase !== 'idle') return cat
         const newTimer = cat.lifeTimer - 100
         if (newTimer <= 0) {
-          return { ...cat,visible: false, phase: 'hidden', lifeTimer: 0 }
+          return { ...cat, visible: false, phase: 'hidden', lifeTimer: 0 }
         }
         return { ...cat, lifeTimer: newTimer }
       }))
     }, 100)
     return () => clearInterval(loopInterval)
-  }, [isPaused])
+  }, [isPaused, isGameOver])
 
-  // タップ時処理
+  // タップ時
   const handleTapCat = (index: number) => {
     const targetCat = cats[index]
-    if (isPaused || !targetCat.visible || targetCat.isAnimating) return
+    if (isPaused || isGameOver || !cats[index].visible || cats[index].isAnimating) return
 
     // スコア計算
     let scoreAdd = 0
@@ -252,7 +272,10 @@ const Game = () => {
     )
   }
 
-  const togglePause = () => setIsPaused(p => !p)
+  const togglePause = () => {
+    if (isGameOver) return
+    setIsPaused(p => !p)
+  }
   const handleResume = () => setIsPaused(false)
   const handleGoToTitle = () => setIsPaused(false)
 
@@ -278,7 +301,7 @@ const Game = () => {
 
           {/* ----- タイマー ----- */}
           <View style={styles.timerArea}>
-            <TimerBar isPaused={isPaused} />
+            <TimerBar timeLeft={timeLeft} maxTime={REMAINING_TIME} />
           </View>
 
 
@@ -305,7 +328,7 @@ const Game = () => {
                   style={[styles.catTapArea, { width: TILE_SIZE * 0.6, height: TILE_SIZE * 0.6 }]}
                   onPress={() => handleTapCat(index)}
                   activeOpacity={1}
-                  disabled={cat.isAnimating}
+                  disabled={cat.isAnimating || isGameOver}
                 >
                   {renderCatImage(cat)}
                 </TouchableOpacity>
@@ -320,6 +343,11 @@ const Game = () => {
             onResume={handleResume}
             onGoToTitle={handleGoToTitle}
           />
+        )}
+
+        {/* ----- フィニッシュ画面 ----- */}
+        {isGameOver && (
+          <FinishScreen />
         )}
       </View>
     </Background >
@@ -520,5 +548,4 @@ const pauseStyles = StyleSheet.create({
     color: '#FFF'
   }
 })
-
 export default Game
