@@ -5,6 +5,8 @@ import { BlurView } from 'expo-blur'
 
 import Background from '../../components/Background'
 import FinishScreen from '../../components/FinishScreen'
+import StartCountdown from '../../components/StartCountdown'
+
 import holeImage from '../../../assets/holeBox.png'
 import catNormal from '../../../assets/catNormalIdle.png'
 import catDevil from '../../../assets/catDevilIdle.png'
@@ -121,11 +123,12 @@ const Game = () => {
   )
   const [isPaused, setIsPaused] = useState(false)
   const [timeLeft, setTimeLeft] = useState(REMAINING_TIME)
+  const [isGameStarted, setIsGameStarted] = useState(false)
   const [isGameOver, setIsGameOver] = useState(false)
 
   // 制限時間
   useEffect(() => {
-    if (isPaused || isGameOver) return
+    if (!isGameStarted || isPaused || isGameOver) return
 
     const interval = setInterval(() => {
       setTimeLeft(prev => {
@@ -140,11 +143,11 @@ const Game = () => {
     }, 100)
 
     return () => clearInterval(interval)
-  }, [isPaused, isGameOver])
+  }, [isGameStarted, isPaused, isGameOver])
 
   // ねこ出現
   useEffect(() => {
-    if (isPaused || isGameOver) return
+    if (!isGameStarted || isPaused || isGameOver) return
     const interval = setInterval(() => {
       const index = Math.floor(Math.random() * moleHoles.length)
       const rand = Math.random()
@@ -161,11 +164,11 @@ const Game = () => {
     }, 1300)
 
     return () => clearInterval(interval)
-  }, [isPaused, isGameOver])
+  }, [isGameStarted, isPaused, isGameOver])
 
   // ねこ出現時間
   useEffect(() => {
-    if (isPaused || isGameOver) return
+    if (!isGameStarted || isPaused || isGameOver) return
 
     const loopInterval = setInterval(() => {
       setCats(prev => prev.map(cat => {
@@ -178,12 +181,12 @@ const Game = () => {
       }))
     }, 100)
     return () => clearInterval(loopInterval)
-  }, [isPaused, isGameOver])
+  }, [isGameStarted, isPaused, isGameOver])
 
   // タップ時
   const handleTapCat = (index: number) => {
     const targetCat = cats[index]
-    if (isPaused || isGameOver || !cats[index].visible || cats[index].isAnimating) return
+    if (!isGameStarted || isPaused || isGameOver || !cats[index].visible || cats[index].isAnimating) return
 
     // スコア計算
     let scoreAdd = 0
@@ -278,10 +281,14 @@ const Game = () => {
   }
   const handleResume = () => setIsPaused(false)
   const handleGoToTitle = () => setIsPaused(false)
+  const handleGameStart = () => setIsGameStarted(true)
 
   return (
     <Background>
       <View style={styles.container}>
+        {!isGameStarted && (
+          <StartCountdown onComplete={handleGameStart} isPaused={isPaused}/>
+        )}
         <View style={styles.infoLayer}>
           <View style={styles.topArea}>
             {/* ----- コンボ ----- */}
@@ -363,7 +370,8 @@ const styles = StyleSheet.create({
   infoLayer: {
     width: '100%',
     marginTop: 80,
-    marginBottom: 80
+    marginBottom: 80,
+    zIndex: 99
   },
   topArea: {
     width: '100%',

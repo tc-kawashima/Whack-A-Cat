@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 999
+        zIndex: 98
     },
     contentContainer: {
         width: width * 0.8
