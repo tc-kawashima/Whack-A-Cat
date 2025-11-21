@@ -8,6 +8,12 @@ import holeImage from '../../../assets/holeBox.png'
 import catNormal from '../../../assets/catNormalIdle.png'
 import catDevil from '../../../assets/catDevilIdle.png'
 import catAngel from '../../../assets/catAngelIdle.png'
+import catNormalHit from '../../../assets/catNormalHit.png'
+import catDevilHit from '../../../assets/catDevilHit.png'
+import catAngelHit from '../../../assets/catAngelHit.png'
+import catNormalEffect from '../../../assets/catNormalEffect.png'
+import catDevilEffect from '../../../assets/catDevilEffect.png'
+import catAngelEffect from '../../../assets/catAngelEffect.png'
 
 const { width } = Dimensions.get('window')
 
@@ -15,9 +21,11 @@ const GRID_SIZE = 3
 const GAME_WIDTH_RATIO = 0.95
 const TILE_SIZE = (width * GAME_WIDTH_RATIO) / GRID_SIZE
 const GAME_AREA_HEIGHT = width * GAME_WIDTH_RATIO
-
 const REMAINING_TIME = 30
 
+// --------------------
+// タイマーゲージ処理
+// --------------------
 const TimerBar = ({ isPaused }: { isPaused: boolean }) => {
   const [timeLeft, setTimeLeft] = useState(REMAINING_TIME)
   const barWidth = width * 0.6
@@ -95,16 +103,21 @@ const PauseScreen: React.FC<PauseScreenProps> = ({ onResume, onGoToTitle }) => {
 // ゲーム画面
 // --------------------
 type CatType = 'normal' | 'devil' | 'angel'
+type AnimationPhase = 'hidden' | 'idle' | 'effect' | 'hit'
 
 interface Cat {
   type: CatType
   visible: boolean
+  isAnimating: boolean
+  phase: AnimationPhase
 }
 
 const Game = () => {
   const moleHoles = Array(GRID_SIZE * GRID_SIZE).fill(0)
+  const [score, setScore] = useState(0)
+  const [combo, setCombo] = useState(0)
   const [cats, setCats] = useState<Cat[]>(
-    moleHoles.map(() => ({ type: 'normal', visible: false }))
+    moleHoles.map(() => ({ type: 'normal', visible: false, isAnimating: false, phase: 'hidden' }))
   )
   const [isPaused, setIsPaused] = useState(false)
 
@@ -113,48 +126,128 @@ const Game = () => {
     if (isPaused) return
     const interval = setInterval(() => {
       const index = Math.floor(Math.random() * moleHoles.length)
-      const types: CatType[] = ['normal', 'devil', 'angel']
-      const randomType = types[Math.floor(Math.random() * types.length)]
+      const rand = Math.random()
+      let randomType: CatType = 'normal'
+      if (rand > 0.85) randomType = 'angel'
+      else if (rand > 0.7) randomType = 'devil'
 
       setCats(prev => {
+        if (prev[index].visible || prev[index].isAnimating) return prev
         const newCats = [...prev]
-        newCats[index] = { type: randomType, visible: true }
+        newCats[index] = { type: randomType, visible: true, isAnimating: false, phase: 'idle' }
         return newCats
       })
 
       setTimeout(() => {
         setCats(prev => {
           const newCats = [...prev]
-          newCats[index].visible = false
+          if (newCats[index].visible && newCats[index].phase === 'idle') {
+            newCats[index] = { ...newCats[index], visible: false, phase: 'hidden' }
+          }
           return newCats
         })
-      }, 1000)
-    }, 1500)
+      }, 1200)
+    }, 800)
 
     return () => clearInterval(interval)
   }, [isPaused])
 
-  const getCatImage = (cat: Cat) => {
-    if (!cat.visible) return null
-    switch (cat.type) {
+  // タップ時処理
+  const handleTapCat = (index: number) => {
+    const targetCat = cats[index]
+    if (isPaused || !targetCat.visible || targetCat.isAnimating) return
+
+    // スコア計算
+    let scoreAdd = 0
+    switch (targetCat.type) {
       case 'normal':
-        return catNormal
-      case 'devil':
-        return catDevil
+        scoreAdd = 100
+        setCombo(prev => prev + 1)
+        break
       case 'angel':
-        return catAngel
+        scoreAdd = 500
+        setCombo(prev => prev + 1)
+        break
+      case 'devil':
+        scoreAdd = -200
+        setCombo(0)
+        break
     }
+    setScore(prev => Math.max(0, prev + scoreAdd))
+
+    // アニメーション エフェクト
+    setCats(prev => {
+      const newCats = [...prev]
+      newCats[index] = { ...newCats[index], isAnimating: true, phase: 'effect' }
+      return newCats
+    })
+
+    // アニメーション ヒット
+    setTimeout(() => {
+      setCats(prev => {
+        const newCats = [...prev]
+        if (newCats[index].isAnimating) {
+          newCats[index] = { ...newCats[index], phase: 'hit' }
+        }
+        return newCats
+      })
+
+      // アニメーション 消滅
+      setTimeout(() => {
+        setCats(prev => {
+          const newCats = [...prev]
+          if (newCats[index].isAnimating) {
+            newCats[index] = { ...newCats[index], visible: false, isAnimating: false, phase: 'hidden' }
+          }
+          return newCats
+        })
+      }, 300)
+
+    }, 100)
   }
 
-  const togglePause = () => {
-    setIsPaused(prev => !prev)
+  const renderCatImage = (cat: Cat) => {
+    if (!cat.visible && cat.phase === 'hidden') return null
+
+    let imageSource
+    if (cat.phase === 'effect') {
+      switch (cat.type) {
+        case 'normal': imageSource = catNormalEffect; break
+        case 'devil': imageSource = catDevilEffect; break
+        case 'angel': imageSource = catAngelEffect; break
+      }
+    } else if (cat.phase === 'hit') {
+      switch (cat.type) {
+        case 'normal': imageSource = catNormalHit; break
+        case 'devil': imageSource = catDevilHit; break
+        case 'angel': imageSource = catAngelHit; break
+      }
+    } else {
+      switch (cat.type) {
+        case 'normal': imageSource = catNormal; break
+        case 'devil': imageSource = catDevil; break
+        case 'angel': imageSource = catAngel; break
+      }
+    }
+
+    if (!imageSource) return null
+    const isEffect = cat.phase === 'effect'
+    return (
+      <Image
+        source={imageSource}
+        style={{
+          width: isEffect ? TILE_SIZE * 0.9 : TILE_SIZE * 0.6,
+          height: isEffect ? TILE_SIZE * 0.9 : TILE_SIZE * 0.6
+        }}
+        resizeMode="contain"
+      />
+    )
   }
-  const handleResume = () => {
-    setIsPaused(false)
-  }
-  const handleGoToTitle = () => {
-    setIsPaused(false)
-  }
+
+  const togglePause = () => setIsPaused(p => !p)
+  const handleResume = () => setIsPaused(false)
+  const handleGoToTitle = () => setIsPaused(false)
+
   return (
     <Background>
       <View style={styles.container}>
@@ -163,7 +256,7 @@ const Game = () => {
             {/* ----- コンボ ----- */}
             <View style={styles.comboArea}>
               <Text style={styles.comboLabel}>コンボ</Text>
-              <Text style={styles.comboNumber}>555</Text>
+              <Text style={styles.comboNumber}>{combo}</Text>
             </View>
             {/* ----- ポーズボタン ----- */}
             <TouchableOpacity
@@ -185,11 +278,10 @@ const Game = () => {
           <View style={styles.scoreAreaWrapper}>
             <View style={styles.scoreArea}>
               <Text style={styles.scoreLabel}>スコア</Text>
-              <Text style={styles.scoreNumber}>9999</Text>
+              <Text style={styles.scoreNumber}>{score}</Text>
             </View>
           </View>
         </View>
-
 
         {/* ----- ゲームエリア ----- */}
         <View style={[styles.gameArea, { height: GAME_AREA_HEIGHT }]}>
@@ -200,12 +292,15 @@ const Game = () => {
                 style={[styles.holeImage, { width: TILE_SIZE, height: TILE_SIZE }]}
                 resizeMode="contain"
               />
-              {cat.visible && (
-                <Image
-                  source={getCatImage(cat)!}
-                  style={[styles.catImage, { width: TILE_SIZE * 0.6, height: TILE_SIZE * 0.6 }]}
-                  resizeMode="contain"
-                />
+              {(cat.visible || cat.isAnimating) && (
+                <TouchableOpacity
+                  style={[styles.catTapArea, { width: TILE_SIZE * 0.6, height: TILE_SIZE * 0.6 }]}
+                  onPress={() => handleTapCat(index)}
+                  activeOpacity={1}
+                  disabled={cat.isAnimating}
+                >
+                  {renderCatImage(cat)}
+                </TouchableOpacity>
               )}
             </View>
           ))}
@@ -321,6 +416,12 @@ const styles = StyleSheet.create({
   },
   catImage: {
     position: 'absolute'
+  },
+  catTapArea: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10
   }
 })
 
