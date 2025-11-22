@@ -8,6 +8,7 @@ import FinishScreen from '../../components/FinishScreen'
 import StartCountdown from '../../components/StartCountdown'
 
 import holeImage from '../../../assets/holeBox.png'
+import shadowImage from '../../../assets/boxShadow.png'
 import catNormal from '../../../assets/catNormalIdle.png'
 import catDevil from '../../../assets/catDevilIdle.png'
 import catAngel from '../../../assets/catAngelIdle.png'
@@ -21,11 +22,13 @@ import catAngelEffect from '../../../assets/catAngelEffect.png'
 const { width } = Dimensions.get('window')
 
 const GRID_SIZE = 3
-const GAME_AREA_WIDTH = width * 0.9
+const GAME_AREA_WIDTH = width * 0.95
 const TILE_SIZE = Math.floor(GAME_AREA_WIDTH / GRID_SIZE)
-const BOX_SIZE = TILE_SIZE * 0.95
-const CAT_SIZE = BOX_SIZE
-const CAT_Y_OFFSET = -32
+const BOX_SIZE = TILE_SIZE * 0.8
+const SHADOW_WIDTH = BOX_SIZE * 1.05
+const SHADOW_HEIGHT = SHADOW_WIDTH
+const CAT_SIZE = BOX_SIZE * 1.25
+const CAT_Y_OFFSET = -36
 const REMAINING_TIME = 30
 const CAT_LIFESPAN = 1200
 
@@ -334,6 +337,18 @@ const Game = () => {
                 { width: TILE_SIZE, height: TILE_SIZE }
               ]}
             >
+              <Image
+                source={shadowImage}
+                style={{
+                  position: 'absolute',
+                  width: SHADOW_WIDTH,
+                  height: SHADOW_HEIGHT,
+                  bottom: -18,
+                  left: 6,
+                  opacity: 0.5
+                }}
+                resizeMode="contain"
+              />
               <Image
                 source={holeImage}
                 style={{ width: BOX_SIZE, height: BOX_SIZE }}
