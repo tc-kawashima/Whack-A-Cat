@@ -21,9 +21,11 @@ import catAngelEffect from '../../../assets/catAngelEffect.png'
 const { width } = Dimensions.get('window')
 
 const GRID_SIZE = 3
-const GAME_WIDTH_RATIO = 0.95
-const TILE_SIZE = (width * GAME_WIDTH_RATIO) / GRID_SIZE
-const GAME_AREA_HEIGHT = width * GAME_WIDTH_RATIO
+const GAME_AREA_WIDTH = width * 0.9
+const TILE_SIZE = Math.floor(GAME_AREA_WIDTH / GRID_SIZE)
+const BOX_SIZE = TILE_SIZE * 0.95
+const CAT_SIZE = BOX_SIZE
+const CAT_Y_OFFSET = -32
 const REMAINING_TIME = 30
 const CAT_LIFESPAN = 1200
 
@@ -262,16 +264,17 @@ const Game = () => {
     }
 
     if (!imageSource) return null
-    const isEffect = cat.phase === 'effect'
     return (
-      <Image
-        source={imageSource}
-        style={{
-          width: isEffect ? TILE_SIZE : TILE_SIZE * 0.6,
-          height: isEffect ? TILE_SIZE : TILE_SIZE * 0.6
-        }}
-        resizeMode="contain"
-      />
+      <View pointerEvents="none">
+        <Image
+          source={imageSource}
+          style={{
+            width: CAT_SIZE,
+            height: CAT_SIZE
+          }}
+          resizeMode="contain"
+        />
+      </View>
     )
   }
 
@@ -287,7 +290,7 @@ const Game = () => {
     <Background>
       <View style={styles.container}>
         {!isGameStarted && (
-          <StartCountdown onComplete={handleGameStart} isPaused={isPaused}/>
+          <StartCountdown onComplete={handleGameStart} isPaused={isPaused} />
         )}
         <View style={styles.infoLayer}>
           <View style={styles.topArea}>
@@ -322,17 +325,29 @@ const Game = () => {
         </View>
 
         {/* ----- ゲームエリア ----- */}
-        <View style={[styles.gameArea, { height: GAME_AREA_HEIGHT }]}>
+        <View style={[styles.gameArea, { width: GAME_AREA_WIDTH }]}>
           {cats.map((cat, index) => (
-            <View key={index} style={styles.holeContainer}>
+            <View
+              key={index}
+              style={[
+                styles.holeContainer,
+                { width: TILE_SIZE, height: TILE_SIZE }
+              ]}
+            >
               <Image
                 source={holeImage}
-                style={[styles.holeImage, { width: TILE_SIZE, height: TILE_SIZE }]}
+                style={{ width: BOX_SIZE, height: BOX_SIZE }}
                 resizeMode="contain"
               />
               {(cat.visible || cat.isAnimating) && (
                 <TouchableOpacity
-                  style={[styles.catTapArea, { width: TILE_SIZE * 0.6, height: TILE_SIZE * 0.6 }]}
+                  style={[styles.catTapArea,
+                  {
+                    width: CAT_SIZE * 0.6,
+                    height: CAT_SIZE * 0.5,
+                    transform: [{ translateY: CAT_Y_OFFSET }]
+                  }
+                  ]}
                   onPress={() => handleTapCat(index)}
                   activeOpacity={1}
                   disabled={cat.isAnimating || isGameOver}
@@ -549,7 +564,6 @@ const pauseStyles = StyleSheet.create({
   titleButton: {
     backgroundColor: '#D9534F'
   },
-  // ボタンテキスト
   buttonText: {
     fontSize: 20,
     fontWeight: 'bold',

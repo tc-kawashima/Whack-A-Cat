@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   titleLogo: {
-    width: '90%',
-    marginTop: 64
+    width: width * 0.9,
+    height: height * 0.5
   },
   buttonContainer: {
     width: '60%',
